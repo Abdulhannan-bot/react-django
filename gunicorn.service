@@ -10,7 +10,7 @@ ExecStart=/Desktop/PROJECT_DEC_2022/react-django/bin/gunicorn \
 	--access-logfile - \
 	--workers 3 \
 	--bind unix:/run/gunicorn.sock \
-	react_django.wsgi:application
+	rsocial.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
