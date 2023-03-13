@@ -30,7 +30,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'abc')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = str(os.environ.get("DEBUG")) == "1"
 
-ALLOWED_HOSTS = ["127.0.0.1", "abdulhannan.online"]
+ALLOWED_HOSTS = ["127.0.0.1", "abdulhannan.online", "0.0.0.0"]
 
 
 # Application definition
@@ -146,7 +146,9 @@ STAICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
 
-STATIC_URL = "/static/"
+STATIC_ROOT = "staticfiles-cdn"
+
+DISABLE_COLLECTSTATIC = 1
 
 DISABLE_COLLECTSTATIC = 1
 
