@@ -96,11 +96,11 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get("PASSWORD"),
-        'PORT': 3306,
-        'HOST': '127.0.0.1',
+        'NAME': 'rdjango',
+        'USER': 'Abdul',
+        'PASSWORD': 'AVNS_JpwKs2WwfkwRZmUnZ9c'
+        'PORT': 25060,
+        'HOST': 'django-db-do-user-13104978-0.b.db.ondigitalocean.com',
     }
 }
 
@@ -142,15 +142,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STAICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static")
-]
+# STAICFILES_DIRS = [
+#     os.path.join(BASE_DIR, "static")
+# ]
 
-STATIC_ROOT = "staticfiles-cdn"
+STATIC_ROOT = "static"
 
-DISABLE_COLLECTSTATIC = 1
-
-DISABLE_COLLECTSTATIC = 1
 
 MEDIA_URL = "/media/"
 
