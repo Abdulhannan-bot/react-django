@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+import json
  
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
@@ -187,21 +188,18 @@ def account_info(request, *args, **kwargs):
 
 
 @api_view(['POST'])
-@parser_classes([MultiPartParser])
+# @parser_classes([MultiPartParser])
 @permission_classes([IsAuthenticated])
 def account_update(request,id):
-  # token = Token.objects.get(key = kwargs.get("key"))
-  # account = Account.objects.get(user = token.user)
   account = Account.objects.get(id = id)
-  print(request.data.get("background_pic"))
-  print(request.data.get("profile_pic"))
-  print(request.data.get("full_name"))
-  print(request.data.get("email"))
-  print(request.data.get("user"))
-  serializers = UpdateAccountSerializer(instance = account, data = request.data)
-  if serializers.is_valid():
-    serializers.save()
-  return Response(serializers.data)
+  if request.method=="POST":
+    body = json.loads(request.body)
+    account.full_name = body.get("full_name")
+    account.email = body.get("email")
+    account.background_pic = body.get("background_pic")
+    account.profile_pic = body.get("profile_pic")
+    account.save()
+  return Response("account updated")
 
 @api_view(['POST'])
 def account_create(request):
@@ -235,33 +233,16 @@ def post_detail(request, id):
   return Response(serializers.data)
 
 @api_view(['POST'])
-@parser_classes([MultiPartParser])
+# @parser_classes([MultiPartParser])
 @permission_classes([IsAuthenticated])
 def post_create(request):
-  print(request.data)
-  account = Account.objects.get(id = request.data["user_id"])
- 
-
-  serializers = CreatePostSerializer(data=request.data)
-  
-  # print(serializers)
-  # Post.objects.create(user_id = account, description = request.data.get("description"), File = request.data.get("File"))
-  try:
-    print(serializers.is_valid())
-    # serializers.save()
-  except ValidationError as e:
-    print(e)
-  if serializers.is_valid():
-    print("post valid")
-    serializers.save()
-  print(Response(serializers.data))
-  # Post.objects.create(description=request.data.get("description"))
-
-
-    
-  # else:
-  #   print(serializers.errors)
-  return Response(serializers.data)
+  if request.method=="POST":
+    body = json.loads(request.body)
+    print(body)
+    account = Account.objects.get(id = body.get("user_id"))
+    Post.objects.create(description = body.get("description"), File = body.get("File"), user_id = account)
+    return Response("post created")
+  return Response("post_failed")
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -284,12 +265,14 @@ def following(request, *args, **kwargs):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def follow(request):
-  serializers = NewFollowSerializer(data = request.data)
-  if serializers.is_valid():
-    serializers.save()
-  
-
-  return Response(serializers.data)
+  if request.method=="POST":
+    body = json.loads(request.body)
+    print(body)
+    follower = Account.objects.get(id = body.get("follower"))
+    followee = Account.objects.get(id = body.get("followee"))
+    Follow.objects.create(followee = followee, follower = follower)
+    return Response("followed")
+  return Response("error")
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -309,10 +292,14 @@ def likes(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def like(request):
-  serializers = LikeSerializer(data = request.data)
-  if serializers.is_valid():
-    serializers.save()
-  return Response(serializers.data)
+  if request.method=="POST":
+    body = json.loads(request.body)
+    post_id = Post.objects.get(id = body.get("post_id"))
+    user_id = Account.objects.get(id = body.get("user_id"))
+    liked_by = Account.objects.get(id = body.get("liked_by"))
+    Like.objects.create(user_id = user_id, post_id = post_id, liked_by = liked_by)
+    return Response("liked")
+  return Response("an error occured")
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -335,62 +322,52 @@ def comments(request, id):
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 def add_comment(request):
-  # post = Post.objects.get(id = id)
-  # comment = Comment.objects.filter(post_id = post)
-  serializers = CommentSerializer(data = request.data)
-  if serializers.is_valid():
-    print("valid")
-    serializers.save()
-  return Response(serializers.data)
+  if request.method=="POST":
+    body = json.loads(request.body)
+    post_id = Post.objects.get(id = body.get("post_id"))
+    user_id = Account.objects.get(id = body.get("user_id"))
+    Comment.objects.create(user_id = user_id, post_id = post_id, text = body.get("text"))
+    return Response("comment added")
+  return Response("an error occured")
 
 #############################################################################################################################
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-  response=""
-  registration_serializers = RegistrationSerializer(data = request.data)
-  if registration_serializers.is_valid():
-    # if (registration_serializers.data.get("password1") == registration_serializers.data.get("password2")):
-    #   try:
-    #     User.objects.create(username = registration_serializers.data.get("username"), first_name = registration_serializers.data.get("first_name"), last_name = registration_serializers.data.get("last_name"), email = registration_serializers.data.get("email"), password = registration_serializers.data.get("password"))
-    #   except:
-    #     return Response("password didnt match")
-    try:
-      registration_serializers.save()
-    except ValueError:
-        return Response("Username already taken. Pickanother username")
-    
-    username = registration_serializers.data.get("username")
-    password = registration_serializers.data.get("password")
-    print(username, password)
-    user = User.objects.get(username = username)
-    auth_user = authenticate(username=username, password=password)
-    print(auth_user)
-    login(request,user)
-    print(request.user)
-    token, _ = Token.objects.get_or_create(user=user)
-    return Response({"token": token.key, "user": user.username, "image": str(token.user.account.profile_pic), 'userId': token.user.id, 'accountId': token.user.account.id, 'backgroundPic': str(token.user.account.background_pic) },  status=HTTP_200_OK)
-  return Response("Registration failed")
+    if request.method=="POST":
+      body = json.loads(request.body)
+      username = body.get("username")
+      first_name = body.get("first_name")
+      last_name = body.get("last_name")
+      email = body.get("email")
+      password = body.get("password")
+      user = User.objects.create(username = username, first_name = first_name, last_name = last_name, email = email, password = password)
+      user.set_password(password)
+      user.save()
+      login(request,user)
+      print(request.user)
+      token, _ = Token.objects.get_or_create(user=user)
+      return Response({"token": token.key, "user": user.username, "image": str(token.user.account.profile_pic), 'userId': token.user.id, 'accountId': token.user.account.id, 'backgroundPic': str(token.user.account.background_pic) },  status=HTTP_200_OK)
+    return Response("Registration failed")
 
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def login_view(request):
-  username = request.data.get("username")
-  password = request.data.get("password")
-  print(username, password)
-  if username is None or password is None:
-    return Response({'error': 'Please provide both username and password'}, status=HTTP_400_BAD_REQUEST)
-  user = authenticate(username=username, password=password)
-  if not user:
-    return Response({'error': 'Invalid Credentials'}, status=HTTP_404_NOT_FOUND)
-  token, _ = Token.objects.get_or_create(user=user)
-  login(request,user)
-  
-  print(request.user)
-  print(token.user.account)
-  return Response({'token': token.key, 'user': token.user.username, 'name': token.user.account.full_name, 'email': token.user.account.email, 'image': str(token.user.account.profile_pic), 'userId': token.user.id, 'accountId': token.user.account.id, 'backgroundPic': str(token.user.account.background_pic) }, status=HTTP_200_OK)
+  if request.method=="POST":
+    body = json.loads(request.body)
+    username = body.get("username")
+    password = body.get("password")
+    if username is None or password is None:
+      return Response({'error': 'Please provide both username and password'}, status=HTTP_400_BAD_REQUEST)
+    user = authenticate(username=username, password=password)
+    if not user:
+      return Response({'error': 'Invalid Credentials'}, status=HTTP_404_NOT_FOUND)
+    token, _ = Token.objects.get_or_create(user=user)
+    login(request,user)
+    return Response({'token': token.key, 'user': token.user.username, 'name': token.user.account.full_name, 'email': token.user.account.email, 'image': str(token.user.account.profile_pic), 'userId': token.user.id, 'accountId': token.user.account.id, 'backgroundPic': str(token.user.account.background_pic) }, status=HTTP_200_OK)
+  return Response("login failed")
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -398,3 +375,4 @@ def logout_view(request):
   request.user.auth_token.delete()
   logout(request)
   return Response("Logged out succesfully")
+
