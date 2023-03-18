@@ -9,6 +9,6 @@
 
 command = '/Desktop/Project_DEC_2022/react-django/bin/gunicorn'
 pythonpath = 'Desktop/Project_DEC_2022/react-django'
-bind = '127.0.0.1:8000'
+bind = '0.0.0.0:8000'
 workers = 3
 user = 'admin'

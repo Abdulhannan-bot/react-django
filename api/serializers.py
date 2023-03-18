@@ -50,6 +50,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
   # image =  serializers.CharField(source='user_id.user.username')
   class Meta:
     model = User
-    fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+    fields = ['username', 'first_name', 'last_name', 'email', 'password']
 
 
