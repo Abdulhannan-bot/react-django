@@ -375,3 +375,4 @@ def logout_view(request):
   request.user.auth_token.delete()
   logout(request)
   return Response("Logged out succesfully")
+
